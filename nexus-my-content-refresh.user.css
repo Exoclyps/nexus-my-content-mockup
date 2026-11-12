@@ -1,0 +1,145 @@
+/* ==UserStyle==
+@name         Nexus Mods - My Content cards refresh
+@namespace    nexusmods-mycontent-refresh
+@version      1.0.0
+@description  Keeps the classic "My Content" mod management cards but recolors them to match the new front page tiles.
+@author       you
+==/UserStyle== */
+
+@-moz-document url-prefix("https://www.nexusmods.com/") {
+
+  /* Fallbacks in case a page doesn't ship the new tokens */
+  .tiles-manage {
+    --rf-surface: var(--color-surface-mid, #29292e);
+    --rf-surface-sunk: var(--color-surface-low, #1d1d21);
+    --rf-footer: var(--color-surface-translucent-low, #ffffff0d);
+    --rf-divider: var(--color-stroke-weak, #ffffff1a);
+    --rf-text-strong: var(--color-neutral-strong, #f4f4f5);
+    --rf-text: var(--color-neutral-moderate, #d4d4d8);
+    --rf-text-subdued: var(--color-neutral-subdued, #a1a1aa);
+    --rf-text-weak: var(--color-neutral-weak, #71717a);
+    --rf-accent: var(--color-primary-moderate, #fb923c);
+    --rf-danger: #f87171;
+  }
+
+  /* ---------- card ---------- */
+  .tiles-manage .mod-tile-left {
+    background: var(--rf-surface) !important;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* ---------- header: thumbnail + title ---------- */
+  .tiles-manage .file-manage-head {
+    background: transparent !important;
+    padding: 12px 12px 10px;
+    border-bottom: 1px solid var(--rf-divider);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: auto !important;
+  }
+  .tiles-manage .file-manage-head::before,
+  .tiles-manage .file-manage-head::after { display: none; }
+
+  .tiles-manage .file-manage-img {
+    float: none !important;
+    margin: 0 !important;
+    flex: none;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--color-surface-translucent-low, #ffffff0d);
+  }
+  .tiles-manage .file-manage-img img { display: block; }
+
+  .tiles-manage .file-manage-title {
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-width: 0;
+    width: auto !important;
+  }
+  .tiles-manage .file-manage-title h3 { margin: 0 0 4px; line-height: 1.3; }
+  .tiles-manage .file-manage-title h3 a {
+    color: var(--rf-text-strong) !important;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .tiles-manage .file-manage-title h3 a:hover { color: var(--rf-accent) !important; text-decoration: none; }
+
+  .tiles-manage .category,
+  .tiles-manage .category small,
+  .tiles-manage .category i {
+    color: var(--rf-text-subdued) !important;
+    font-size: 12px;
+    font-style: normal;
+  }
+  .tiles-manage .category a { color: var(--rf-text-subdued) !important; }
+  .tiles-manage .category a:hover { color: var(--rf-text) !important; text-decoration: underline; }
+
+  /* ---------- body: link lists ---------- */
+  .tiles-manage .file-manage-options {
+    background: transparent !important;
+    flex: 1;
+  }
+  .tiles-manage .file-manage-options .tile-content { padding: 12px 12px 14px !important; }
+
+  .tiles-manage .file-manage-options h4 {
+    color: var(--rf-text-subdued) !important;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  .tiles-manage .file-manage-options .col-1-2 + .col-1-2 h4 + ul + h4,
+  .tiles-manage .file-manage-options .form-choices + h4 { margin-top: 14px; }
+
+  .tiles-manage .arrowlist li {
+    color: var(--rf-text-weak);            /* the "(6)" counts */
+    font-size: 13px;
+    line-height: 1.75;
+    background-image: none !important;     /* drop the old orange arrows */
+    padding-left: 0 !important;
+  }
+  .tiles-manage .arrowlist li a {
+    color: var(--rf-text) !important;
+    font-size: 13px;
+  }
+  .tiles-manage .arrowlist li a:hover {
+    color: var(--rf-accent) !important;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Delete: quiet until hovered */
+  .tiles-manage .arrowlist li a.delete-mod { color: var(--rf-text-weak) !important; cursor: pointer; }
+  .tiles-manage .arrowlist li a.delete-mod:hover { color: var(--rf-danger) !important; }
+
+  /* Visible / hidden radios */
+  .tiles-manage .form-choices li { line-height: 1.75; }
+  .tiles-manage .form-choices input[type="radio"] { accent-color: var(--rf-accent); }
+  .tiles-manage .form-choices .radio-response { color: var(--rf-text) !important; font-size: 13px; }
+  .tiles-manage .form-choices input:not(:checked) + .radio-response { color: var(--rf-text-weak) !important; }
+
+  /* ---------- footer: stats bar like the front page ---------- */
+  .tiles-manage .tile-data {
+    background: var(--rf-footer) !important;
+    border-top: 1px solid var(--rf-divider);
+    padding: 8px 12px !important;
+    margin-top: auto;
+    color: var(--rf-text-subdued) !important;
+  }
+  .tiles-manage .tile-data ul { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; }
+  .tiles-manage .tile-data li { margin: 0 !important; padding: 0 !important; float: none !important; font-size: 12px; white-space: nowrap; color: var(--rf-text-subdued); }
+  .tiles-manage .tile-data li .icon { fill: var(--rf-text-weak) !important; }
+  .tiles-manage .tile-data li a { color: var(--rf-text-subdued) !important; }
+  .tiles-manage .tile-data li a:hover { color: var(--rf-text) !important; text-decoration: underline; }
+  .tiles-manage .tile-data small {
+    margin-top: 6px !important;
+    color: var(--rf-text-weak) !important;
+    font-size: 11px;
+  }
+}

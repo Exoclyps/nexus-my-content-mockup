@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Content cards refresh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --zinc-100:#f4f4f5;--zinc-300:#d4d4d8;--zinc-400:#a1a1aa;--zinc-500:#71717a;--zinc-700:#3e3e47;
+  --zinc-800:#29292e;--zinc-900:#1d1d21;--zinc-950:#0f0f10;
+  --orange:#fb923c;--old-orange:#d98f40;--danger:#f87171;
+  --stroke-weak:#ffffff1a;--stroke-subdued:#ffffff33;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--zinc-950);color:var(--zinc-300);font:14px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1360px;margin:0 auto;padding:32px 16px 64px}
+
+/* ---------- intro ---------- */
+.intro{max-width:760px;margin-bottom:24px}
+.eyebrow{font-size:12px;font-weight:600;color:var(--orange);letter-spacing:.04em;text-transform:uppercase;margin:0 0 6px}
+h1{font-size:26px;line-height:1.25;font-weight:700;color:var(--zinc-100);margin:0 0 10px}
+.intro p{margin:0 0 10px;color:var(--zinc-400);font-size:15px}
+.intro strong{color:var(--zinc-300);font-weight:600}
+
+/* ---------- toggle ---------- */
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:24px 0 16px}
+.seg{display:inline-flex;background:#ffffff0d;border:1px solid var(--stroke-weak);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:13px;font-weight:500;color:var(--zinc-400);background:none;border:0;border-radius:999px;padding:6px 14px;cursor:pointer}
+.seg button:hover{color:var(--zinc-100)}
+.seg button[aria-pressed="true"]{background:var(--zinc-700);color:var(--zinc-100)}
+.hint{font-size:12px;color:var(--zinc-500)}
+
+/* ---------- grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:15px;padding:16px;border-radius:6px}
+.grid.old{background:#1b1b1e}
+.grid.new{background:var(--zinc-950);padding-left:0;padding-right:0}
+.compare{display:grid;gap:28px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px}
+.pair .label{font-size:12px;font-weight:600;color:var(--zinc-500);margin:0 0 6px}
+.pair .col.old-bg{background:#1b1b1e;padding:10px;border-radius:6px}
+
+/* ---------- shared card skeleton ---------- */
+.card{display:flex;flex-direction:column;min-width:0}
+.head{display:flex;align-items:center;gap:10px}
+.head img{width:88px;height:50px;object-fit:cover;flex:none;display:block}
+.ttl{min-width:0}
+.ttl h3{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl a{text-decoration:none}
+.body{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;flex:1}
+.body h4{margin:0}
+.body ul{list-style:none;margin:0;padding:0}
+.radio{display:flex;align-items:center;gap:6px}
+.radio input{margin:0}
+.stats{display:flex;flex-wrap:wrap;align-items:center}
+.stats span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.stats svg{width:14px;height:14px;fill:currentColor;flex:none}
+a{cursor:pointer}
+
+/* ---------- CURRENT (as live today) ---------- */
+.old .card{background:#232326}
+.old .head{background:#141416;height:50px;gap:12px}
+.old .ttl h3{font-size:15px;font-weight:600;line-height:19px}
+.old .ttl h3 a{color:var(--old-orange)}
+.old .cat{font-size:11px;color:#ddd}
+.old .cat i{font-size:11px}
+.old .cat a{color:var(--old-orange)}
+.old .body{padding:10px 15px 14px}
+.old .body h4{font-size:14px;font-weight:700;color:#e1e1e1;margin-bottom:4px}
+.old .body li{font-size:14px;line-height:22px;color:#ddd;padding-left:10px;position:relative}
+.old .links li::before{content:"›";position:absolute;left:0;top:-1px;color:#ddd;font-weight:700}
+.old .body li a{color:var(--old-orange)}
+.old .radio{padding-left:0!important}
+.old .radio label{color:#ddd}
+.old .other{margin-top:10px}
+.old .pending-tag,.old .pending-new{display:none}
+.old .foot{background:#1a1a1c;padding:10px;font-size:11px;color:#8e8e8e;margin-top:auto}
+.old .stats{gap:6px 20px}
+.old .stats a{color:#8e8e8e;text-decoration:none}
+.old .last{display:block;margin-top:12px;font-size:10px;color:#ddd}
+
+/* ---------- REFRESHED ---------- */
+.new .card{background:var(--zinc-800);border-radius:4px;overflow:hidden}
+.new .head{padding:12px 12px 10px;border-bottom:1px solid var(--stroke-weak);gap:12px}
+.new .head img{border-radius:4px;background:#ffffff0d}
+.new .ttl h3{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:3px}
+.new .ttl h3 a{color:var(--zinc-100)}
+.new .ttl h3 a:hover{color:var(--orange)}
+.new .cat{font-size:12px;color:var(--zinc-400)}
+.new .cat i{font-style:normal}
+.new .cat a{color:var(--zinc-400);text-decoration:none}
+.new .cat a:hover{color:var(--zinc-300);text-decoration:underline}
+.new .body{padding:12px 12px 14px}
+.new .body h4{font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--zinc-400);margin-bottom:6px}
+.new .body li{font-size:13px;line-height:1.75;color:var(--zinc-400)}
+.new .body li a{color:var(--zinc-300);text-decoration:none}
+.new .body li a:hover{color:var(--orange);text-decoration:underline;text-underline-offset:2px}
+.new .radio input{accent-color:var(--orange)}
+.new .radio label{color:var(--zinc-300);font-size:13px}
+.new .radio input:not(:checked)+label{color:var(--zinc-400)}
+.new .other{margin-top:14px}
+.new a.delete{color:var(--danger)!important}
+.new a.delete:hover{color:#fca5a5!important;text-decoration:underline!important;text-underline-offset:2px}
+.new .pending-tag{display:inline-block;margin-left:6px;font-size:11px;font-weight:500;line-height:1;padding:3px 6px;border-radius:999px;background:#fb923c26;color:var(--orange);vertical-align:1px}
+.new .pending-src{display:none}
+.new .foot{background:#ffffff0d;border-top:1px solid var(--stroke-weak);padding:8px 12px;font-size:12px;color:var(--zinc-400);margin-top:auto}
+.new .stats{gap:4px 14px}
+.new .stats svg{fill:var(--zinc-400)}
+.new .stats a{color:var(--zinc-400);text-decoration:none}
+.new .stats a:hover{color:var(--zinc-300);text-decoration:underline}
+.new .last{display:block;margin-top:6px;font-size:11px;color:var(--zinc-400)}
+
+/* ---------- MIDDLE GROUND (prototype direction, nothing hidden) ---------- */
+.hy{display:flex;flex-direction:column;background:var(--zinc-800);border-radius:6px;overflow:hidden;min-width:0}
+.hy .shot{position:relative;aspect-ratio:16/9;background:#ffffff0d;overflow:hidden}
+.hy .shot img{width:100%;height:100%;object-fit:contain;display:block;transition:opacity .2s,filter .2s}
+.hy.is-hidden .shot img{opacity:.45;filter:grayscale(1)}
+.hy.is-hidden h3 a{color:var(--zinc-400)}
+.hy .tags{position:absolute;left:6px;bottom:6px;z-index:1;display:flex;gap:4px}
+.hy .tag{font-size:11px;font-weight:700;line-height:1;letter-spacing:.02em;padding:4px 7px;border-radius:4px;color:#fff}
+.hy .tag.adult{background:#18181be6;color:#f87171;box-shadow:inset 0 0 0 1px #f8717166}
+.hy .tag.ai{background:rgb(98,191,248);color:rgb(12,42,61)}
+.hy .tag.plus{background:var(--orange);color:#1d1d21}
+.hy .cpfoot .st a.new,.hy .cpfoot .st a.new svg{color:var(--orange);fill:var(--orange);font-weight:700}
+.hy .cpfoot .st a.new:hover,.hy .cpfoot .st a.new:hover svg{color:#fdba74;fill:#fdba74}
+.cp .tags{left:4px;bottom:4px;gap:3px}
+.cp .tag{font-size:10px;padding:3px 5px}
+.hy .dp{display:inline-flex;align-items:center;gap:4px;margin-left:14px;font-size:13px;font-weight:600;color:#27ae60;white-space:nowrap}
+.hy .dp svg{width:15px;height:15px;fill:currentColor}
+.hy .dp svg + svg{margin-left:-2px}
+.hy .dp.split{color:color-mix(in srgb,#27ae60 80%,#a1a1aa)}
+.hy .dp.none{color:var(--zinc-400);font-weight:400}
+.hy .cprow{justify-content:flex-start}
+.hy .cpfoot .st{justify-content:space-between}
+.hy .cprow .del{margin-left:auto}
+.hy .hidmark{display:none;position:absolute;inset:0;align-items:center;justify-content:center;pointer-events:none}
+.hy.is-hidden .hidmark{display:flex}
+.hy .hidmark span{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;background:#000000b3;color:var(--zinc-100);font-size:14px;font-weight:600}
+.hy .hidmark svg{width:18px;height:18px;fill:currentColor}
+.hy .badges{position:absolute;left:0;right:0;top:0;min-height:60px;padding:8px 8px 20px;display:flex;align-items:flex-start;align-content:flex-start;gap:6px;flex-wrap:wrap;background:linear-gradient(to bottom,#000000b3 0%,#000000b3 calc(100% - 28px),#00000000 100%);pointer-events:none}
+.hy .badges a.badge{pointer-events:auto;text-decoration:none}
+.hy .badges a.badge.warn:hover{background:#3a2412}
+.hy .badge{font-size:12px;font-weight:600;line-height:1;padding:5px 8px;border-radius:999px;background:#000000cc;color:var(--zinc-100);display:inline-flex;align-items:center;gap:5px}
+.hy .badge.warn{background:#2b1a0e;color:var(--orange);box-shadow:inset 0 0 0 1px #fb923c66}
+.hy .badge svg{width:13px;height:13px;fill:currentColor}
+.hy .badge.bad{background:#2a1213;color:var(--danger);box-shadow:inset 0 0 0 1px #f8717166;pointer-events:auto;text-decoration:none}
+.hy .badge.bad:hover{background:#3a1718}
+.hy .acts .quar{color:var(--danger);font-size:12px;margin-left:6px}
+.hy .info{padding:12px 14px 10px}
+.hy .meta{font-size:13px;color:var(--zinc-400);display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.hy .meta a{color:var(--zinc-400);text-decoration:underline;text-underline-offset:2px}
+.hy .meta a:hover{color:var(--zinc-100)}
+.hy .dot{width:3px;height:3px;border-radius:50%;background:var(--zinc-500);flex:none}
+.hy h3{margin:6px 0 8px;font-size:16px;line-height:1.3;font-weight:600}
+.hy h3 a{color:var(--zinc-100);text-decoration:none}
+.hy h3 a:hover{text-decoration:underline;text-underline-offset:3px}
+.hy .st{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:13px;color:var(--zinc-400)}
+.hy .st span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.hy .st svg{width:15px;height:15px;fill:var(--zinc-400);flex:none}
+.hy .acts{margin:0 14px;padding:8px 0 10px;border-top:1px solid var(--stroke-weak)}
+.hy .acts nav{display:flex;flex-direction:column;align-items:flex-start;font-size:14px;line-height:1.75}
+.hy .st a{display:inline-flex;align-items:center;gap:4px;color:var(--zinc-400);text-decoration:none}
+.hy .st a:hover{color:var(--zinc-100);text-decoration:underline;text-underline-offset:2px}
+.hy .st a:hover svg{fill:var(--zinc-100)}
+.hy .acts a{color:var(--zinc-300);text-decoration:none;white-space:nowrap}
+.hy .acts a:hover{color:var(--orange);text-decoration:underline;text-underline-offset:2px}
+.hy .acts .n{color:var(--zinc-400);font-size:12px;margin-left:3px}
+.hy .acts .pend{color:var(--orange);font-size:12px;margin-left:3px}
+.hy .bottom{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#ffffff0d;border-top:1px solid var(--stroke-weak);font-size:13px}
+.hy .sw{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:2px 0;font:inherit;color:var(--zinc-300);cursor:pointer}
+.hy .sw .trk{width:30px;height:18px;border-radius:999px;background:var(--zinc-700);position:relative;transition:background .15s;flex:none}
+.hy .sw .trk::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--zinc-300);transition:transform .15s}
+.hy .sw[aria-checked="true"] .trk{background:var(--orange)}
+.hy .sw[aria-checked="true"] .trk::after{transform:translateX(12px);background:#1d1d21}
+.hy .last{color:var(--zinc-400);font-size:12px;margin-left:auto}
+.hy .del{display:inline-flex;align-items:center;gap:5px;background:none;border:0;border-radius:4px;padding:3px 8px;margin-right:-8px;font:inherit;font-size:13px;font-weight:500;color:var(--danger);cursor:pointer}
+.hy .del svg{width:15px;height:15px;fill:currentColor}
+.hy .del:hover{background:#f8717126;color:#fca5a5}
+.grid.hyg{background:var(--zinc-950);padding-left:0;padding-right:0;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.pair.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));align-items:start}
+
+/* ---------- COMPACT, formerly Stacked (title under thumbnail, flags on thumbnail, metrics in footer) ---------- */
+.sk .skhead{display:flex;gap:12px;padding:12px 14px 8px}
+.sk .shot{position:relative}
+.sk .side{display:flex;flex-direction:column;min-width:0;flex:1;font-size:13px;color:var(--zinc-400);line-height:1.35}
+.sk .skcat{color:var(--zinc-400);text-decoration:underline;text-underline-offset:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.sk .skcat:hover{color:var(--zinc-100)}
+.sk .flags{position:absolute;top:4px;right:4px;display:flex;gap:4px}
+.sk .flag{width:22px;height:22px;border-radius:50%;display:grid;place-items:center}
+.sk .flag svg{width:13px;height:13px;fill:currentColor}
+.sk .flag.bad{background:#2a1213;color:var(--danger);box-shadow:inset 0 0 0 1px #f8717199}
+.sk .flag.warn{background:#2b1a0e;color:var(--orange);box-shadow:inset 0 0 0 1px #fb923c99}
+.cp.sk h3{margin:0 14px 8px;font-size:15px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+@media (min-width:1100px){.pair.three{grid-template-columns:minmax(0,470px) minmax(0,320px) minmax(0,320px);justify-content:center}}
+
+/* ---------- COMPACT (small thumbnail, metrics in the footer) ---------- */
+.cp .cphead{display:flex;align-items:flex-start;gap:12px;padding:12px 14px 10px}
+.cp .shot{display:block;width:120px;flex:none;border-radius:4px}
+.cp .hidmark span{padding:6px;border-radius:50%}
+.cp .hidmark svg{width:18px;height:18px}
+.cp .cpttl{min-width:0;flex:1}
+.cp .meta{flex-wrap:nowrap;white-space:nowrap;min-width:0}
+.cp .meta a{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cp h3{margin:4px 0 0;font-size:15px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cp .alerts{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px}
+.cp .alerts > *{margin-bottom:10px}
+.cp .badge.hidc{display:none;background:#ffffff1a}
+.cp.is-hidden .badge.hidc{display:inline-flex}
+.hy .cpfoot{margin-top:auto;background:#ffffff0d;border-top:1px solid var(--stroke-weak);padding:8px 14px}
+.hy .cprow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--stroke-weak);font-size:13px}
+.hy .cprow .last{display:inline-flex;align-items:center;gap:4px;margin-left:0;color:var(--zinc-400);font-size:12px;text-decoration:none;white-space:nowrap}
+.hy .cprow .last svg{width:13px;height:13px;fill:currentColor}
+.hy .cprow .last:hover{color:var(--zinc-100);text-decoration:underline;text-underline-offset:2px}
+.hy .info{padding-bottom:4px}
+:where(a,button,input):focus-visible{outline:2px solid var(--orange);outline-offset:2px;border-radius:3px}
+
+/* ---------- notes ---------- */
+.notes{margin-top:40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.note{background:var(--zinc-900);border:1px solid var(--stroke-weak);border-radius:6px;padding:14px 16px}
+.note h2{font-size:14px;font-weight:600;color:var(--zinc-100);margin:0 0 8px}
+.note ul{margin:0;padding-left:18px;color:var(--zinc-400);font-size:13px}
+.note li{margin:3px 0}
+.small{margin-top:24px;font-size:12px;color:var(--zinc-500)}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media (max-width:420px){.body{grid-template-columns:1fr}.body>div+div{margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="intro">
+    <p class="eyebrow">Suggestion · My Content page</p>
+    <h1>Keep the classic mod cards, give them the new colors</h1>
+    <p>The current management cards put every action in view at once: no menus, no extra clicks, and six mods fit on one screen. That's the part worth keeping.</p>
+    <p>What dates them is <strong>the paint, not the layout</strong>. <strong>Refreshed</strong> keeps the layout, every link, and the density exactly as they are, and only recolors them with the palette the new front page mod tiles already use.</p>
+    <p><strong>Middle ground</strong> goes further toward the new tile prototype: front page image, meta, title, and stats, plus its edit links. The difference is that the edit drawer is always open. No hover, no menus, no icon-only buttons. As on the old cards, the title opens the mod page and the comment and discussion counts open those tabs.</p>
+    <p><strong>Compact</strong> fits four per row: game and category beside the thumbnail, the title under it, and the metrics in the footer. Warnings never add height. They show as small icons on the thumbnail and as notes on the Files and Media links.</p>
+  </header>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="View" data-kind="view">
+      <button type="button" data-view="compare" aria-pressed="true">Side by side</button>
+      <button type="button" data-view="old" aria-pressed="false">Current</button>
+      <button type="button" data-view="new" aria-pressed="false">Refreshed</button>
+      <button type="button" data-view="hy" aria-pressed="false">Middle ground</button>
+      <button type="button" data-view="sk" aria-pressed="false">Compact</button>
+    </div>
+    <div class="seg" role="group" aria-label="Which mods" data-kind="set">
+      <button type="button" data-set="latest" aria-pressed="true">Latest</button>
+      <button type="button" data-set="endorsed" aria-pressed="false">Most endorsed</button>
+    </div>
+    <span class="hint">Real cards from my own mods. In Middle ground the links go to the real pages and the visibility switch works.</span>
+  </div>
+
+  <section id="v-compare" class="compare"></section>
+  <section id="v-hy" class="grid hyg" hidden></section>
+  <section id="v-sk" class="grid hyg" hidden></section>
+  <section id="v-new" class="grid new" hidden></section>
+  <section id="v-old" class="grid old" hidden></section>
+
+  <section class="notes">
+    <div class="note">
+      <h2>What stays the same</h2>
+      <ul>
+        <li>Card size, two-column layout, and order of links</li>
+        <li>Every management link visible without opening a menu</li>
+        <li>Counts next to Media, Files, and Articles</li>
+        <li>Visibility radios, stats footer, last comment time</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>What changes</h2>
+      <ul>
+        <li>Card and footer surfaces use the front page tile colors</li>
+        <li>Links are neutral and turn orange on hover, so orange stops being wallpaper</li>
+        <li>Counts and section labels are dimmed so link names lead</li>
+        <li>Thumbnail gets rounded corners, title band blends into the card</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>Small fixes along the way</h2>
+      <ul>
+        <li><strong style="color:var(--zinc-300);font-weight:500">Delete this mod</strong> is red, so it no longer looks like every other orange link</li>
+        <li>Pending media gets a small badge instead of hiding inside "(3, 1 pending)"</li>
+        <li>Footer stats stay on one line</li>
+        <li>Content tags sit in the thumbnail's bottom-left corner: red <strong style="color:var(--zinc-300);font-weight:500">Adult</strong> and blue <strong style="color:var(--zinc-300);font-weight:500">AI</strong> (the blue people already know from the AI tags in browse and popular extensions). The footer has a tag count that lights up orange when a tag was added that you haven't seen yet (the tooltip names it), which makes AI tags added by others, missing AI declarations, or tag trolling easy to spot</li>
+        <li>Donation Points status sits next to the visibility switch: green <strong style="color:var(--zinc-300);font-weight:500">DP</strong> when opted in, with an extra split icon when the points are shared with other authors, and gray <strong style="color:var(--zinc-300);font-weight:500">No DP</strong> when not, so a mod you forgot to opt in stands out</li>
+        <li>Comment, discussion, and bug counts turn <strong style="color:var(--orange);font-weight:700">orange and bold</strong> while they have something you haven't seen. In Middle ground, each new item also gets its own orange badge next to the other alerts on the thumbnail (new tag, new bugs, new comments), wrapping to a second row when needed. This builds on the notification read state the site already tracks. Tag changes would need a new notification.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h2>Middle ground: what it keeps from the old cards</h2>
+      <ul>
+        <li>Every edit section is a visible text link, one click away, with its count</li>
+        <li>Nothing appears only on hover, so it works the same with touch, keyboard, and screen readers</li>
+        <li>Visibility is a labeled switch, not something buried in a menu</li>
+        <li>All text meets WCAG AA contrast on the card, including counts and secondary text</li>
+        <li>Links are grouped in labeled nav regions, and keyboard focus is clearly outlined</li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="small">Unofficial mockup made by a mod author as feedback. Colors are taken from the tokens the site already ships (surface-mid, neutral-moderate, stroke-weak, primary-moderate).</p>
+</div>
+
+<script>
+const SETS = {"latest": [{"title": "People Live In - An eXofied World", "game": "Fallout 4", "cat": "Locations - Vanilla", "img": "assets/110757-1793380654-1114012758.png", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(6)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "19", "dl": "3.5k/22.1k", "comments": "8 Comments", "disc": "0 Discussions", "last": "06 Nov 2026, 3:15PM"}, {"title": "Commonwealth Pizza - Delayed Start", "game": "Fallout 4", "cat": "Items (Food, Drinks, Chems, etc)", "img": "assets/110660-1793184402-840109061.png", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1", "dl": "34/35", "comments": "4 Comments", "disc": "0 Discussions", "last": "09 Nov 2026, 12:19PM"}, {"title": "Double Feature - eXoPatch", "game": "Fallout 4", "cat": "Quests and Adventures", "img": "assets/110228-1792232290-184797004.png", "links": [["Mod details", ""], ["Media", "(2)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "40", "dl": "7.1k/11.3k", "comments": "15 Comments", "disc": "0 Discussions", "last": "03 Nov 2026, 10:34PM"}, {"title": "Looks Menu Face Categories - Extended Facial Sculpting Support", "game": "Fallout 4", "cat": "User Interface", "img": "assets/109809-1791363701-1495413071.png", "links": [["Mod details", ""], ["Media", "(3, 1 pending)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(2)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "82", "dl": "4k/4.5k", "comments": "18 Comments", "disc": "0 Discussions", "last": "20 Oct 2026, 8:04AM"}, {"title": "Ammo Has Weight - in All Difficulties", "game": "Fallout 4", "cat": "Ammo", "img": "assets/109260-1789915089-2079825273.png", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(3)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "24", "dl": "1.5k/3.8k", "comments": "5 Comments", "disc": "0 Discussions", "last": "03 Oct 2026, 12:38PM"}, {"title": "Looks Menu Scrollbar", "game": "Fallout 4", "cat": "User Interface", "img": "assets/109190-1789769669-290286.png", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(6)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "156", "dl": "8.7k/12k", "comments": "32 Comments", "disc": "0 Discussions", "last": "07 Nov 2026, 10:26AM"}, {"title": "Standalone Nuka-Cola Manufacturing Workstation - eXoPatch", "game": "Fallout 4", "cat": "Quests and Adventures", "img": "assets/107032-1784185997-7521662.png", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(3)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "2", "dl": "30/50", "comments": "1 Comments", "disc": "0 Discussions", "last": "13 Sep 2026, 9:22AM"}, {"title": "Ketaros World - Proper Shelving", "game": "Fallout 4", "cat": "Models and Textures", "img": "assets/101625-1771492533-2001424096.jpg", "links": [["Mod details", ""], ["Media", "(2)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(4)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "45", "dl": "4.7k/15.3k", "comments": "22 Comments", "disc": "0 Discussions", "last": "27 Feb 2026, 10:27AM"}, {"title": "The Zap Gun - eXoPatch", "game": "Fallout 4", "cat": "Weapons", "img": "assets/100299-1768721923-939719891.jpg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "113", "dl": "63k/103.7k", "comments": "4 Comments", "disc": "0 Discussions", "last": "15 Jul 2026, 11:10AM"}, {"title": "Sacrificial Wasteland Raider", "game": "Fallout 4", "cat": "Quests and Adventures", "img": "assets/99970-1793277954-1121458961.png", "links": [["Mod details", ""], ["Media", "(3)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(5)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "129", "dl": "64.7k/212.1k", "comments": "13 Comments", "disc": "0 Discussions", "last": "09 Nov 2026, 8:15PM"}, {"title": "Wasteland Ronin Helmet - Colorful GASI", "game": "Fallout 4", "cat": "Armour", "img": "assets/99958-1767955844-1289232627.png", "links": [["Mod details", ""], ["Media", "(5)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "72", "dl": "61.9k/101.3k", "comments": "4 Comments", "disc": "0 Discussions", "last": "09 Jan 2026, 10:33PM"}, {"title": "Misery Island - eXoPatch", "game": "Fallout 4", "cat": "Patches", "img": "assets/98817-1764615867-1923484532.jpg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "232", "dl": "112.2k/184.6k", "comments": "10 Comments", "disc": "0 Discussions", "last": "13 Aug 2026, 5:43PM"}, {"title": "Player Unmasked - Remove Headwear in Dialogue", "game": "Fallout 4", "cat": "Immersion", "img": "assets/98772-1764516953-222644603.png", "links": [["Mod details", ""], ["Media", "(4)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(5)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "227", "dl": "112.6k/269.9k", "comments": "36 Comments", "disc": "0 Discussions", "last": "06 Nov 2026, 7:52PM"}, {"title": "Atom Girl Outfit - eXospanded", "game": "Fallout 4", "cat": "Armour", "img": "assets/96427-1756991121-1840193678.jpg", "links": [["Mod details", ""], ["Media", "(4)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(2)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "111", "dl": "88.4k/146.9k", "comments": "7 Comments", "disc": "0 Discussions", "last": "07 Sep 2025, 10:23PM"}, {"title": "Transmission Zeta - eXoPatch", "game": "Fallout 4", "cat": "Patches", "img": "assets/96388-1756874806-871036351.jpg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(2)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "183", "dl": "90.5k/162.2k", "comments": "13 Comments", "disc": "0 Discussions", "last": "28 Apr 2026, 6:42AM"}, {"title": "eXofied Goodneighbor", "game": "Fallout 4", "cat": "Locations - Vanilla", "img": "assets/96182-1756281263-159071474.jpg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(8)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "300", "dl": "96.2k/540.1k", "comments": "128 Comments", "disc": "0 Discussions", "last": "31 Oct 2026, 8:47AM"}, {"title": "Private Military Company - eXospanded", "game": "Fallout 4", "cat": "Armour", "img": "assets/94151-1748762369-1593835475.jpeg", "links": [["Mod details", ""], ["Media", "(10)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(2)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "51", "dl": "4.8k/12.5k", "comments": "7 Comments", "disc": "0 Discussions", "last": "29 Sep 2025, 12:45AM"}, {"title": "Ellen - eXoPatch", "game": "Fallout 4", "cat": "Companions", "img": "assets/93767-1747225082-239473407.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(2)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "329", "dl": "105.9k/355.4k", "comments": "101 Comments", "disc": "1 Discussions", "last": "10 Aug 2026, 4:06AM"}, {"title": "Rat Runners Arsenal - eXospanded (No Munitions)", "game": "Fallout 4", "cat": "Weapons", "img": "assets/92755-1744210921-926013711.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(4)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "191", "dl": "142.3k/652.8k", "comments": "33 Comments", "disc": "0 Discussions", "last": "22 Jan 2026, 6:37PM"}, {"title": "Kid in a Fridge - The Slog Peabodys (Settlers)", "game": "Fallout 4", "cat": "NPC", "img": "assets/92235-1742029200-141611402.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "201", "dl": "105.6k/180.2k", "comments": "43 Comments", "disc": "0 Discussions", "last": "25 Jun 2026, 7:08PM"}], "endorsed": [{"title": "ELFX - PreVis PreCombine Patch", "game": "Fallout 4", "cat": "Patches", "img": "assets/64990-1665397327-1727248987.jpeg", "links": [["Mod details", ""], ["Media", "(13)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(20)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "2.5k", "dl": "287.3k/3.4M", "comments": "587 Comments", "disc": "0 Discussions", "last": "15 Oct 2026, 3:43PM"}, {"title": "Diamond City Expansion - eXoPatch", "game": "Fallout 4", "cat": "Locations - Vanilla", "img": "assets/66724-1670319031-1335527265.jpeg", "links": [["Mod details", ""], ["Media", "(2)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(9)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "2.2k", "dl": "298.2k/1.1M", "comments": "376 Comments", "disc": "0 Discussions", "last": "04 Nov 2026, 5:52PM"}, {"title": "See Through Scopes - Night Vision", "game": "Fallout 4", "cat": "Weapons", "img": "assets/62775-1659248548-986267792.png", "links": [["Mod details", ""], ["Media", "(3)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(8)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.9k", "dl": "347.4k/1.7M", "comments": "53 Comments", "disc": "0 Discussions", "last": "23 Mar 2026, 10:39PM"}, {"title": "Wall Mounted Magazine Shelf", "game": "Fallout 4", "cat": "Collectibles, Treasure Hunts, and Puzzles", "img": "assets/67261-1672125359-1856185450.jpeg", "links": [["Mod details", ""], ["Media", "(7, 2 pending)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.7k", "dl": "226.3k/437k", "comments": "57 Comments", "disc": "0 Discussions", "last": "22 Jan 2025, 4:43AM"}, {"title": "Fourville - eXoPatch", "game": "Fallout 4", "cat": "Patches", "img": "assets/61080-1654586194-861091666.jpeg", "links": [["Mod details", ""], ["Media", "(2, 3 pending)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(8)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.6k", "dl": "333.5k/1.8M", "comments": "188 Comments", "disc": "0 Discussions", "last": "21 Jun 2026, 9:48PM"}, {"title": "Legendary Rearmed", "game": "Fallout 4", "cat": "Crafting - Equipment", "img": "assets/61287-1655108747-976993063.png", "links": [["Mod details", ""], ["Media", "(3)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(15)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.6k", "dl": "260.9k/2.3M", "comments": "240 Comments", "disc": "0 Discussions", "last": "29 Aug 2026, 5:06AM"}, {"title": "Lootable Cars - Exiguous", "game": "Fallout 4", "cat": "Vehicles", "img": "assets/63025-1659895035-1158895091.jpeg", "links": [["Mod details", ""], ["Media", "(2)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(6)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.4k", "dl": "265.2k/1M", "comments": "82 Comments", "disc": "0 Discussions", "last": "25 Jul 2026, 1:07PM"}, {"title": "FGEP - A Legendary Addition", "game": "Fallout 4", "cat": "Creatures", "img": "assets/62184-1657815376-4510234.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(8)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.4k", "dl": "275k/877.9k", "comments": "51 Comments", "disc": "0 Discussions", "last": "13 May 2026, 3:36AM"}, {"title": "Lootable Ketaros Treasures", "game": "Fallout 4", "cat": "Collectibles, Treasure Hunts, and Puzzles", "img": "assets/66857-1670750101-1957300110.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(5)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.3k", "dl": "251.1k/1.1M", "comments": "100 Comments", "disc": "0 Discussions", "last": "12 Oct 2025, 12:28PM"}, {"title": "Tales from the Commonwealth - eXoPatch", "game": "Fallout 4", "cat": "Patches", "img": "assets/72111-1686653455-383104918.jpeg", "links": [["Mod details", ""], ["Media", "(2)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(7)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.3k", "dl": "298.2k/1.8M", "comments": "123 Comments", "disc": "0 Discussions", "last": "30 Jul 2026, 1:25AM"}, {"title": "Keeper of the Commonwealth Radiants", "game": "Fallout 4", "cat": "Patches", "img": "assets/79369-1709796136-1926921343.png", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(2)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.2k", "dl": "195.8k/360.8k", "comments": "109 Comments", "disc": "0 Discussions", "last": "07 Oct 2026, 2:13AM"}, {"title": "Ketaros Treasures - Board Games Shelf", "game": "Fallout 4", "cat": "Collectibles, Treasure Hunts, and Puzzles", "img": "assets/66657-1670072478-1882715378.jpeg", "links": [["Mod details", ""], ["Media", "(3, 1 pending)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.1k", "dl": "225.1k/442.9k", "comments": "76 Comments", "disc": "0 Discussions", "last": "20 Nov 2024, 2:26PM"}, {"title": "A StoryWealth - Assorted Patches", "game": "Fallout 4", "cat": "Patches", "img": "assets/60927-1739707061-1673902678.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(51)"], ["Manage articles", "(1)"]], "hidden": false, "endorse": "1.1k", "dl": "239.5k/11.6M", "comments": "46 Comments", "disc": "0 Discussions", "last": "08 Dec 2024, 1:59AM"}, {"title": "Tales from the Commonwealth - UFO4P Patch", "game": "Fallout 4", "cat": "Patches", "img": "assets/69869-1679373873-950051105.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.0k", "dl": "182.2k/321.4k", "comments": "30 Comments", "disc": "0 Discussions", "last": "06 Sep 2025, 4:40AM"}, {"title": "Natural Landscapes - Invisible Dirt Fix", "game": "Fallout 4", "cat": "Models and Textures", "img": "assets/71554-1684822140-1633689846.jpeg", "links": [["Mod details", ""], ["Media", "(8)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(3)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "1.0k", "dl": "271.5k/934.4k", "comments": "25 Comments", "disc": "0 Discussions", "last": "03 Aug 2026, 9:19AM"}, {"title": "America Rising 2 - eXoCompat Patches", "game": "Fallout 4", "cat": "Patches", "img": "assets/76732-1702642758-260960823.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(13)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "999", "dl": "226.1k/1.3M", "comments": "117 Comments", "disc": "0 Discussions", "last": "02 Nov 2026, 7:32PM"}, {"title": "Diamond City Radio Extended - Fix Radio", "game": "Fallout 4", "cat": "Radio", "img": "assets/68027-1674312567-482567591.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": true, "endorse": "998", "dl": "176.8k/319.8k", "comments": "30 Comments", "disc": "0 Discussions", "last": "06 Nov 2025, 11:22PM"}, {"title": "Ketaros Treasures - Postcard Rack", "game": "Fallout 4", "cat": "Collectibles, Treasure Hunts, and Puzzles", "img": "assets/66390-1669365390-627682244.jpeg", "links": [["Mod details", ""], ["Media", "(2)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(1)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "989", "dl": "225.4k/440.9k", "comments": "23 Comments", "disc": "0 Discussions", "last": "24 Apr 2026, 11:31PM"}, {"title": "eXofied Depravity - Fallons", "game": "Fallout 4", "cat": "Patches", "img": "assets/61767-1656589966-476064582.png", "links": [["Mod details", ""], ["Media", "(4)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(8)"], ["Manage articles", "(0)"]], "hidden": false, "endorse": "963", "dl": "207.7k/1.2M", "comments": "119 Comments", "disc": "0 Discussions", "last": "25 Oct 2026, 12:31AM"}, {"title": "(Redundant) Backpacks of the Commonwealth - eXoPatch", "game": "Fallout 4", "cat": "Patches", "img": "assets/66821-1707749646-544503464.jpeg", "links": [["Mod details", ""], ["Media", "(1)"], ["Documentation", ""], ["Permissions", ""], ["Requirements and mirrors", ""], ["Manage files", "(5)"], ["Manage articles", "(0)"]], "hidden": true, "endorse": "921", "dl": "128.7k/477.7k", "comments": "55 Comments", "disc": "0 Discussions", "last": "06 May 2024, 2:50AM"}]};
+// Demo decorations below run once over every set; then the page shows one set at a time.
+let CARDS = [...SETS.latest, ...(SETS.endorsed || [])];
+// Demo only: show one card in its hidden state so the treatment is visible without clicking.
+const DEMO_HIDDEN = 'Double Feature - eXoPatch';
+CARDS.forEach(c => { if (c.title === DEMO_HIDDEN) c.hidden = true; });
+// Demo only: quarantined files (not in the saved page data).
+const DEMO_QUARANTINE = {'Looks Menu Scrollbar': 2, 'A StoryWealth - Assorted Patches': 1, 'Looks Menu Face Categories - Extended Facial Sculpting Support': 1};
+CARDS.forEach(c => { if (DEMO_QUARANTINE[c.title]) c.quarantined = DEMO_QUARANTINE[c.title]; });
+// Demo only: open bug report counts (not in the saved page data).
+const DEMO_BUGS = [0, 1, 2, 3, 0, 4, 0, 1, 0, 2, 5, 1, 3, 7, 2, 4, 12, 0, 9, 6,
+  14, 9, 3, 2, 11, 21, 6, 4, 8, 13, 5, 3, 7, 2, 1, 6, 0, 2, 9, 0];
+CARDS.forEach((c, i) => { c.bugs = DEMO_BUGS[i] || 0; });
+// Demo only: content tags.
+const DEMO_ADULT = ['Commonwealth Pizza - Delayed Start'];
+const DEMO_AI = ['Legendary Rearmed', 'Ammo Has Weight - in All Difficulties', 'Ketaros World - Proper Shelving'];
+const DEMO_TAG_COUNTS = [6, 4, 5, 7, 5, 6, 3, 8, 4, 9, 11, 7, 10, 12, 9, 10, 14, 6, 13, 11,
+  18, 16, 12, 9, 15, 21, 13, 11, 10, 17, 12, 8, 14, 7, 9, 13, 6, 8, 15, 7];
+const DEMO_DP_SPLIT = ['Tales from the Commonwealth - eXoPatch', 'Double Feature - eXoPatch', 'Looks Menu Scrollbar'];
+const DEMO_NO_DP = ['Commonwealth Pizza - Delayed Start', 'Standalone Nuka-Cola Manufacturing Workstation - eXoPatch'];
+CARDS.forEach(c => { c.tags = [...(DEMO_ADULT.includes(c.title) ? ['adult'] : []), ...(DEMO_AI.includes(c.title) ? ['ai'] : [])]; });
+// Demo only: things the author hasn't viewed yet.
+CARDS.forEach((c, i) => { c.tagCount = DEMO_TAG_COUNTS[i] || 0; c.dp = DEMO_NO_DP.includes(c.title) ? false : (DEMO_DP_SPLIT.includes(c.title) ? 'split' : true); });
+const DEMO_UNSEEN = {
+  'ELFX - PreVis PreCombine Patch': {comments: 12, bugs: 2},
+  'Legendary Rearmed': {tag: {name: 'AI', when: '5 hours ago'}},
+  'Fourville - eXoPatch': {comments: 3},
+  'Commonwealth Pizza - Delayed Start': {comments: 1, tag: {name: 'Adult', when: '3 hours ago'}},
+  'Ammo Has Weight - in All Difficulties': {tag: {name: 'AI', when: '2 days ago'}},
+  'Looks Menu Face Categories - Extended Facial Sculpting Support': {bugs: 1},
+  'Looks Menu Scrollbar': {comments: 2, bugs: 1},
+  'Double Feature - eXoPatch': {disc: 1}
+};
+CARDS.forEach(c => { c.unseen = DEMO_UNSEEN[c.title] || {}; });
+if (!CARDS.some(c => c.title === 'Double Feature - eXoPatch' && parseInt(c.disc, 10) > 0)) {
+  CARDS.forEach(c => { if (c.title === 'Double Feature - eXoPatch') c.disc = '1 Discussions'; });
+}
+let SET = 'latest';
+CARDS = SETS[SET];
+
+
+const ICON = {
+  endorse: 'M23,10C23,8.89 22.1,8 21,8H14.68L15.64,3.43C15.66,3.33 15.67,3.22 15.67,3.11C15.67,2.7 15.5,2.32 15.23,2.05L14.17,1L7.59,7.58C7.22,7.95 7,8.45 7,9V19A2,2 0 0,0 9,21H18C18.83,21 19.54,20.5 19.84,19.78L22.86,12.73C22.95,12.5 23,12.26 23,12V10M1,21H5V9H1V21Z',
+  download: 'M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z',
+  comment: 'M9,22A1,1 0 0,1 8,21V18H4A2,2 0 0,1 2,16V4C2,2.89 2.9,2 4,2H20A2,2 0 0,1 22,4V16A2,2 0 0,1 20,18H13.9L10.2,21.71C10,21.9 9.75,22 9.5,22H9Z'
+};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const svg = k => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[k]}"/></svg>`;
+let uid = 0;
+
+function linkItem([name, count]) {
+  const m = /^\((\d+), (\d+) pending\)$/.exec(count || '');
+  if (m) {
+    return `<li><a>${esc(name)}</a> <span class="pending-src">${esc(count)}</span><span class="pending-new">(${m[1]})</span><span class="pending-tag">${m[2]} pending</span></li>`;
+  }
+  return `<li><a>${esc(name)}</a>${count ? ' ' + esc(count) : ''}</li>`;
+}
+
+function card(c) {
+  const id = 'r' + (uid++);
+  return `<article class="card">
+    <div class="head">
+      <img src="${esc(c.img)}" alt="" width="88" height="50">
+      <div class="ttl">
+        <h3><a title="${esc(c.title)}">${esc(c.title)}</a></h3>
+        <div class="cat"><i>${esc(c.game)}</i> | <a>${esc(c.cat)}</a></div>
+      </div>
+    </div>
+    <div class="body">
+      <div>
+        <h4>Manage mod</h4>
+        <ul class="links">${c.links.map(linkItem).join('')}</ul>
+      </div>
+      <div>
+        <h4>Mod status</h4>
+        <ul>
+          <li class="radio"><input type="radio" name="${id}" id="${id}v" ${c.hidden ? '' : 'checked'}><label for="${id}v">Visible</label></li>
+          <li class="radio"><input type="radio" name="${id}" id="${id}h" ${c.hidden ? 'checked' : ''}><label for="${id}h">Hidden</label></li>
+        </ul>
+        <h4 class="other">Other</h4>
+        <ul class="links"><li><a class="delete">Delete this mod</a></li></ul>
+      </div>
+    </div>
+    <div class="foot">
+      <div class="stats">
+        <span title="Endorsements">${svg('endorse')}${esc(c.endorse)}</span>
+        <span title="Downloads (unique/total)">${svg('download')}${esc(c.dl)}</span>
+        <span>${svg('comment')}<a>${esc(c.comments)}</a></span>
+        <span>${svg('comment')}<a>${esc(c.disc)}</a></span>
+      </div>
+      <small class="last">Last comment at : ${esc(c.last)}</small>
+    </div>
+  </article>`;
+}
+
+const ICON2 = {
+  clock: 'M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z',
+  trash: 'M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z',
+  eyeOff: 'M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z',
+  bug: 'M14,12H10V10H14M14,16H10V14H14M20,8H17.19C16.74,7.22 16.12,6.55 15.37,6.04L17,4.41L15.59,3L13.42,5.17C12.96,5.06 12.5,5 12,5C11.5,5 11.04,5.06 10.59,5.17L8.41,3L7,4.41L8.62,6.04C7.88,6.55 7.26,7.22 6.81,8H4V10H6.09C6.04,10.33 6,10.66 6,11V12H4V14H6V15C6,15.34 6.04,15.67 6.09,16H4V18H6.81C7.85,19.79 9.78,21 12,21C14.22,21 16.15,19.79 17.19,18H20V16H17.91C17.96,15.67 18,15.34 18,15V14H20V12H18V11C18,10.66 17.96,10.33 17.91,10H20V8Z',
+  tag: 'M5.5,7A1.5,1.5 0 0,1 4,5.5A1.5,1.5 0 0,1 5.5,4A1.5,1.5 0 0,1 7,5.5A1.5,1.5 0 0,1 5.5,7M21.41,11.58L12.41,2.58C12.05,2.22 11.55,2 11,2H4C2.89,2 2,2.89 2,4V11C2,11.55 2.22,12.05 2.59,12.41L11.58,21.41C11.95,21.77 12.45,22 13,22C13.55,22 14.05,21.77 14.41,21.41L21.41,14.41C21.78,14.05 22,13.55 22,13C22,12.44 21.77,11.94 21.41,11.58Z',
+  split: 'M14,4L16.29,6.29L13.41,9.17L14.83,10.59L17.71,7.71L20,10V4M10,4H4V10L6.29,7.71L11,12.41V20H13V11.59L7.71,6.29',
+  coin: 'M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M13,17V19H11V17C9.35,16.7 8,15.62 8,14H10C10,14.55 10.9,15.25 12,15.25C13.1,15.25 14,14.55 14,14C14,13.45 13.1,12.75 12,12.75C9.8,12.75 8,11.55 8,10C8,8.45 9.35,7.3 11,7V5H13V7C14.65,7.3 16,8.45 16,10H14C14,9.45 13.1,8.75 12,8.75C10.9,8.75 10,9.45 10,10C10,10.55 10.9,11.25 12,11.25C14.2,11.25 16,12.45 16,14C16,15.55 14.65,16.7 13,17Z',
+  shieldAlert: 'M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M11,7H13V13H11V7M11,15H13V17H11V15Z',
+  forum: 'M17,12V3A1,1 0 0,0 16,2H3A1,1 0 0,0 2,3V17L6,13H16A1,1 0 0,0 17,12M21,6H19V15H6V17A1,1 0 0,0 7,18H18L22,22V7A1,1 0 0,0 21,6Z',
+  image: 'M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z'
+};
+Object.assign(ICON, ICON2);
+
+const SHORT = {'Mod details': 'Details', 'Manage files': 'Files', 'Manage articles': 'Articles'};
+const SECTION = {'Mod details': 'general', 'Media': 'media', 'Documentation': 'documents', 'Permissions': 'permissions',
+  'Requirements and mirrors': 'requirements', 'Manage files': 'files', 'Manage articles': 'articles'};
+const GAME = {'Fallout 4': 'fallout4'};
+function urls(c) {
+  const id = (/assets\/(\d+)-/.exec(c.img) || [])[1];
+  const g = GAME[c.game] || 'fallout4';
+  const page = `https://www.nexusmods.com/${g}/mods/${id}`;
+  return {page, posts: page + '?tab=posts', forum: page + '?tab=forum', bugs: page + '?tab=bugs', edit: s => `https://www.nexusmods.com/games/${g}/mods/${id}/edit/${s}`};
+}
+function hyLink([name, count], c) {
+  const label = SHORT[name] || name;
+  const m = /^\((\d+)(?:, (\d+) pending)?\)$/.exec(count || '');
+  const n = m ? `<span class="n">${m[1]}</span>` : '';
+  const p = m && m[2] ? `<span class="pend">+${m[2]} pending</span>` : '';
+  const q = name === 'Manage files' && c.quarantined ? `<span class="quar">${c.quarantined} quarantined</span>` : '';
+  return `<a href="${urls(c).edit(SECTION[name] || 'general')}" target="_blank" rel="noopener">${esc(label)}${n}${p}${q}</a>`;
+}
+
+function hybrid(c) {
+  const pending = c.links.map(l => /(\d+) pending/.exec(l[1] || '')).find(Boolean);
+  const total = (c.dl.split('/')[1] || c.dl);
+  const uniq = c.dl.split('/')[0];
+  const date = c.last.split(',')[0];
+  const nC = parseInt(c.comments, 10), nD = parseInt(c.disc, 10);
+  const u = urls(c);
+  const nFiles = parseInt(((c.links.find(l => l[0] === 'Manage files') || [])[1] || '').replace(/\D/g, ''), 10) || 0;
+  return `<article class="hy${c.hidden ? ' is-hidden' : ''}">
+    <div class="shot">
+      <img src="${esc(c.img)}" alt="">
+      ${(() => {
+        const b = (c.quarantined ? `<a class="badge bad" href="${u.edit('files')}" target="_blank" rel="noopener">${svg('shieldAlert')}${c.quarantined} of ${nFiles} files quarantined</a>` : '')
+                + (pending ? `<span class="badge warn">${svg('image')}${pending[1]} media pending</span>` : '')
+                + newBadges(c, u);
+        return b ? `<div class="badges">${b}</div>` : '';
+      })()}
+      <div class="hidmark"><span>${svg('eyeOff')}Mod page hidden</span></div>
+      ${adultTag(c)}
+    </div>
+    <div class="info">
+      <div class="meta"><span>${esc(c.game)}</span><span class="dot" aria-hidden="true"></span><a>${esc(c.cat)}</a></div>
+      <h3><a href="${u.page}" target="_blank" rel="noopener">${esc(c.title)}</a></h3>
+    </div>
+    <div class="acts">
+      <nav aria-label="Edit ${esc(c.title)}">${c.links.map(l => hyLink(l, c)).join('')}</nav>
+    </div>
+    ${footer(c)}
+  </article>`;
+}
+
+function stacked(c) {
+  const pending = c.links.map(l => /(\d+) pending/.exec(l[1] || '')).find(Boolean);
+  const total = (c.dl.split('/')[1] || c.dl);
+  const uniq = c.dl.split('/')[0];
+  const date = c.last.split(',')[0];
+  const nC = parseInt(c.comments, 10), nD = parseInt(c.disc, 10);
+  const u = urls(c);
+  const nFiles = parseInt(((c.links.find(l => l[0] === 'Manage files') || [])[1] || '').replace(/\D/g, ''), 10) || 0;
+  const flags = (c.quarantined ? `<span class="flag bad" title="${c.quarantined} of ${nFiles} files quarantined">${svg('shieldAlert')}</span>` : '')
+              + (pending ? `<span class="flag warn" title="${pending[1]} media pending">${svg('image')}</span>` : '');
+  return `<article class="hy cp sk${c.hidden ? ' is-hidden' : ''}">
+    <div class="skhead">
+      <a class="shot" href="${u.page}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+        <img src="${esc(c.img)}" alt="">
+        <div class="hidmark"><span>${svg('eyeOff')}</span></div>
+        ${flags ? `<div class="flags">${flags}</div>` : ''}
+        ${adultTag(c)}
+      </a>
+      <div class="side">
+        <span>${esc(c.game)}</span>
+        <a class="skcat" title="${esc(c.cat)}">${esc(c.cat)}</a>
+      </div>
+    </div>
+    <h3><a href="${u.page}" target="_blank" rel="noopener" title="${esc(c.title)}">${esc(c.title)}${tagText(c) ? `<span class="sr-only">${esc(tagText(c))}</span>` : ''}</a></h3>
+    <div class="acts">
+      <nav aria-label="Edit ${esc(c.title)}">${c.links.map(l => hyLink(l, c)).join('')}</nav>
+    </div>
+    ${footer(c)}
+  </article>`;
+}
+
+// "Unseen" = has items the author hasn't viewed yet (would come from notification read state).
+// Middle ground only: each unseen item as its own badge in the alert row, styled like "media pending".
+function newBadges(c, u) {
+  const un = c.unseen || {};
+  const b = (href, icon, text) => `<a class="badge warn" href="${href}" target="_blank" rel="noopener">${svg(icon)}${esc(text)}</a>`;
+  return (un.tag ? b(u.page, 'tag', `New tag: ${un.tag.name}`) : '')
+       + (un.bugs ? b(u.bugs, 'bug', pl(un.bugs, 'new bug')) : '')
+       + (un.comments ? b(u.posts, 'comment', pl(un.comments, 'new comment')) : '')
+       + (un.disc ? b(u.forum, 'forum', pl(un.disc, 'new discussion')) : '');
+}
+function dpTag(c) {
+  if (!c.dp) return `<span class="dp none" title="Not opted in to Donation Points">${svg('coin')}No DP</span>`;
+  // Opted in is always green. Split adds a split icon where "No" sits on the not-opted-in label.
+  return c.dp === 'split'
+    ? `<span class="dp split" title="Opted in to Donation Points, split with other authors">${svg('coin')}${svg('split')}DP</span>`
+    : `<span class="dp" title="Opted in to Donation Points">${svg('coin')}DP</span>`;
+}
+// Content tags shown on the thumbnail. "New tag" appears while a tag change is unseen.
+const TAGS = {adult: {label: 'Adult', title: 'Tagged as adult content'}, ai: {label: 'AI', title: 'Tagged as using generative AI'}};
+function tagText(c) {
+  const list = (c.tags || []).map(t => TAGS[t].title.replace('Tagged as ', ''));
+  const n = c.unseen && c.unseen.tag;
+  return list.length || n ? ` (${[...list, n ? `${n.name} tag added ${n.when}` : ''].filter(Boolean).join('; ')})` : '';
+}
+function adultTag(c) {
+  const n = c.unseen && c.unseen.tag;
+  const pill = t => `<span class="tag ${t}" title="${TAGS[t].title}${n && TAGS[t].label === n.name ? ` · added ${esc(n.when)}` : ''}">${TAGS[t].label}</span>`;
+  const pills = (c.tags || []).map(pill).join('');
+  return pills ? `<div class="tags">${pills}</div>` : '';
+}
+// 1234 -> "1.2k", 1250000 -> "1.3M" (same style the site uses for downloads).
+function short(v) {
+  const n = typeof v === 'number' ? v : parseFloat(String(v).replace(/,/g, ''));
+  if (!isFinite(n) || n < 1000) return esc(String(v));
+  const [d, s] = n >= 1e6 ? [1e6, 'M'] : [1e3, 'k'];
+  return (Math.round(n / d * 10) / 10).toString() + s;
+}
+const pl = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const isNew = n => n ? ' class="new"' : '';
+const newTxt = (n, sep = ' ·') => n ? `${sep} ${n} new` : '';
+
+// Shared footer for Middle ground and Compact: metrics row, then switch / last comment / delete.
+const THIS_YEAR = new Date().getFullYear();
+function lastComment(c) {
+  const m = /^(\d+) (\w+) (\d{4})/.exec(c.last || '');
+  if (!m) return {short: c.last, full: c.last};
+  const short = `${parseInt(m[1], 10)} ${m[2]}` + (parseInt(m[3], 10) === THIS_YEAR ? '' : ` ${m[3]}`);
+  return {short, full: c.last};
+}
+function footer(c) {
+  const total = (c.dl.split('/')[1] || c.dl);
+  const uniq = c.dl.split('/')[0];
+  const nC = parseInt(c.comments, 10), nD = parseInt(c.disc, 10);
+  const u = urls(c);
+  const lc = lastComment(c);
+  const un = c.unseen || {};
+  return `<div class="cpfoot">
+      <div class="st">
+        <span title="${esc(c.endorse)} endorsements">${svg('endorse')}${short(c.endorse)}<span class="sr-only"> endorsements</span></span>
+        <span title="Downloads: ${esc(uniq)} unique, ${esc(total)} total">${svg('download')}${esc(total)}<span class="sr-only"> downloads</span></span>
+        <a href="${u.posts}" target="_blank" rel="noopener"${isNew(un.comments)} title="${pl(nC, 'comment')}${newTxt(un.comments)} · last ${esc(lc.short)}">${svg('comment')}${short(nC)}<span class="sr-only"> comments${newTxt(un.comments, ',')}, last on ${esc(lc.short)}</span></a>
+        <a href="${u.forum}" target="_blank" rel="noopener"${isNew(un.disc)} title="${pl(nD, 'discussion')}${newTxt(un.disc)}">${svg('forum')}${short(nD)}<span class="sr-only"> discussions${newTxt(un.disc, ',')}</span></a>
+        <a href="${u.bugs}" target="_blank" rel="noopener"${isNew(un.bugs)} title="${pl(c.bugs || 0, 'open bug')}${newTxt(un.bugs)}">${svg('bug')}${short(c.bugs || 0)}<span class="sr-only"> open bug reports${newTxt(un.bugs, ',')}</span></a>
+        <a class="tagcount${un.tag ? ' new' : ''}" href="${u.page}" target="_blank" rel="noopener" title="${pl(c.tagCount || 0, 'tag')}${un.tag ? ` · new: ${esc(un.tag.name)}, added ${esc(un.tag.when)}` : ''}">${svg('tag')}${short(c.tagCount || 0)}<span class="sr-only"> tags${un.tag ? `, new: ${esc(un.tag.name)} added ${esc(un.tag.when)}` : ''}</span></a>
+      </div>
+      <div class="cprow">
+        <button type="button" class="sw" role="switch" aria-checked="${c.hidden ? 'false' : 'true'}"><span class="trk" aria-hidden="true"></span>Visible</button>
+        ${dpTag(c)}
+        <button type="button" class="del" aria-label="Delete ${esc(c.title)}">${svg('trash')}Delete</button>
+      </div>
+    </div>`;
+}
+
+function render() {
+document.getElementById('v-sk').innerHTML = CARDS.map(stacked).join('');
+document.getElementById('v-new').innerHTML = CARDS.map(card).join('');
+document.getElementById('v-old').innerHTML = CARDS.map(card).join('');
+document.getElementById('v-hy').innerHTML = CARDS.map(hybrid).join('');
+document.getElementById('v-compare').innerHTML = CARDS.slice(0, 4).map(c => `
+  <div class="pair three">
+    <div class="col old-bg old"><p class="label">Current</p>${card(c)}</div>
+    <div class="col"><p class="label">Middle ground</p>${hybrid(c)}</div>
+    <div class="col"><p class="label">Compact</p>${stacked(c)}</div>
+  </div>`).join('');
+}
+render();
+
+const setButtons = document.querySelectorAll('.seg[data-kind="set"] button');
+function useSet(k) {
+  if (!SETS[k]) return;
+  SET = k; CARDS = SETS[k];
+  setButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.set === k)));
+  render();
+  try { localStorage.setItem('rf-set', k); } catch (e) {}
+}
+setButtons.forEach(b => b.addEventListener('click', () => useSet(b.dataset.set)));
+try { const k = localStorage.getItem('rf-set'); if (k) useSet(k); } catch (e) {}
+
+document.addEventListener('click', e => {
+  const sw = e.target.closest('.hy .sw');
+  if (!sw) return;
+  const on = sw.getAttribute('aria-checked') !== 'true';
+  sw.setAttribute('aria-checked', String(on));
+  const card = sw.closest('.hy');
+  card.classList.toggle('is-hidden', !on);
+});
+
+const buttons = document.querySelectorAll('.seg[data-kind="view"] button');
+function show(view) {
+  buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+  ['compare', 'new', 'old', 'hy', 'sk'].forEach(v => document.getElementById('v-' + v).hidden = v !== view);
+  try { localStorage.setItem('rf-view', view); } catch (e) {}
+}
+buttons.forEach(b => b.addEventListener('click', () => show(b.dataset.view)));
+try { const v = localStorage.getItem('rf-view'); if (v && document.getElementById('v-' + v)) show(v); } catch (e) {}
+</script>
+</body>
+</html>
